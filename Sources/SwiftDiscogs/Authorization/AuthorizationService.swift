@@ -6,19 +6,9 @@
 //
 
 import Foundation
-import Combine
 
 final class AuthorizationService: Service {
-    
-    // MARK: - Types
-    
-    enum AuthorizationError: Error {
-        case invalidRequestTokenResponse
-        case invalidAccessTokenResponse
-    }
-    
-    
-    
+
     // MARK: - Private Properties
     
     private let callbackURL: String
@@ -38,16 +28,16 @@ final class AuthorizationService: Service {
     
     // MARK: - Functions
     
-    func getAuthorizationURL() -> AnyPublisher<URL, Error> {
+    func getAuthorizationURL() async throws -> URL {
         let headers = [
             #"oauth_signature="\#(consumerSecret)&""#,
             #"oauth_callback="\#(callbackURL)""#
         ]
         
-        return get("/oauth/request_token", headers: headers, decode: generateAuthorizationURL)
+        return try await get("/oauth/request_token", headers: headers, decode: generateAuthorizationURL)
     }
     
-    func getAccessToken(verificationURL: URL) -> AnyPublisher<AccessToken, Error> {
+    func getAccessToken(verificationURL: URL) async throws -> AccessToken {
         if
             let components = URLComponents(url: verificationURL, resolvingAgainstBaseURL: false),
             let authToken = components.queryItems?.first(where: { $0.name == "oauth_token" })?.value,
@@ -60,9 +50,9 @@ final class AuthorizationService: Service {
                 #"oauth_verifier="\#(authVerifier)""#
             ]
             
-            return post("/oauth/access_token", headers: headers, decode: parseAccessTokenResponse)
+            return try await post("/oauth/access_token", headers: headers, decode: parseAccessTokenResponse)
         } else {
-            return .failure(AuthorizationError.invalidAccessTokenResponse)
+            throw URLError(.badServerResponse)
         }
     }
     
@@ -90,7 +80,7 @@ final class AuthorizationService: Service {
             self.authSecret = authSecret
             return url
         } else {
-            throw AuthorizationError.invalidRequestTokenResponse
+            throw URLError(.badServerResponse)
         }
     }
     
@@ -103,7 +93,7 @@ final class AuthorizationService: Service {
 
             return AccessToken(token: accessToken, secret: accessTokenSecret)
         } else {
-            throw AuthorizationError.invalidAccessTokenResponse
+            throw URLError(.badServerResponse)
         }
     }
 }

@@ -6,18 +6,12 @@
 //
 
 import Foundation
-import Combine
 
 class Service {
     
     // MARK: - Types
     
     typealias Parameters = [(name: String, value: CustomStringConvertible)]
-    
-    enum ServiceError: Error {
-        case invalidURL
-        case missingCredentials
-    }
     
     
     
@@ -73,24 +67,20 @@ class Service {
     
     // MARK: - Functions
     
-    final func get<Response>(_ path: String, parameters: Parameters? = nil, headers: [String] = [], decode: @escaping (Data) throws -> Response) -> AnyPublisher<Response, Error> {
-        url(for: path, parameters: parameters)
-            .flatMap{ self.request(URLRequest(method: .get, url: $0), headers: headers, decode: decode) }
-            .eraseToAnyPublisher()
+    final func get<Response>(_ path: String, parameters: Parameters? = nil, headers: [String] = [], decode: @escaping (Data) throws -> Response) async throws -> Response {
+        try await request(URLRequest(method: .get, url: url(for: path, parameters: parameters)), headers: headers, decode: decode)
     }
     
-    final func get<Response: Decodable>(_ path: String, parameters: Parameters? = nil, headers: [String] = []) -> AnyPublisher<Response, Error> {
-        get(path, parameters: parameters, headers: headers, decode: decode)
+    final func get<Response: Decodable>(_ path: String, parameters: Parameters? = nil, headers: [String] = []) async throws -> Response {
+        try await get(path, parameters: parameters, headers: headers, decode: decode)
     }
     
-    final func get<Response: Decodable>(_ url: URL, headers: [String] = []) -> AnyPublisher<Response, Error> {
-        request(URLRequest(method: .get, url: url), headers: headers, decode: decode)
+    final func get<Response: Decodable>(_ url: URL, headers: [String] = []) async throws -> Response {
+        try await request(URLRequest(method: .get, url: url), headers: headers, decode: decode)
     }
     
-    final func post<Response>(_ path: String, parameters: Parameters? = nil, headers: [String] = [], decode: @escaping (Data) throws -> Response) -> AnyPublisher<Response, Error> {
-        url(for: path, parameters: parameters)
-            .flatMap{ self.request(URLRequest(method: .post, url: $0), headers: headers, decode: decode) }
-            .eraseToAnyPublisher()
+    final func post<Response>(_ path: String, parameters: Parameters? = nil, headers: [String] = [], decode: @escaping (Data) throws -> Response) async throws -> Response {
+        try await request(URLRequest(method: .post, url: url(for: path, parameters: parameters)), headers: headers, decode: decode)
     }
     
     func prepareAuthHeaders() throws -> [String] {
@@ -112,22 +102,20 @@ class Service {
     
     // MARK: - Private Functions
     
-    private func request<Response: Decodable>(_ request: URLRequest, headers: [String]) -> AnyPublisher<Response, Error> {
-        self.request(request, headers: headers, decode: decode)
+    private func request<Response: Decodable>(_ request: URLRequest, headers: [String]) async throws -> Response {
+        try await self.request(request, headers: headers, decode: decode)
     }
     
-    private func request<Response>(_ request: URLRequest, headers: [String], decode: @escaping (Data) throws -> Response) -> AnyPublisher<Response, Error> {
-        do {
-            let authHeaders = try prepareAuthHeaders()
-            var request = request
-            request.setValue((authHeaders + headers).joined(separator: ", "), forHTTPHeaderField: "Authorization")
-            
-            return URLSession.shared
-                .dataTaskPublisher(for: try prepare(request))
-                .tryMap { data, _ in try decode(data) }
-                .eraseToAnyPublisher()
-        } catch {
-            return .failure(error)
+    private func request<Response>(_ request: URLRequest, headers: [String], decode: @escaping (Data) throws -> Response) async throws -> Response {
+        let authHeaders = try prepareAuthHeaders()
+        var request = request
+        request.setValue((authHeaders + headers).joined(separator: ", "), forHTTPHeaderField: "Authorization")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        if let response = response as? HTTPURLResponse, response.status.isSuccess {
+            return try decode(data)
+        } else {
+            throw URLError(.badServerResponse)
         }
     }
     
@@ -135,7 +123,7 @@ class Service {
         try JSONDecoder().decode(Response.self, from: data)
     }
     
-    private func url(for path: String, parameters: Parameters?) -> AnyPublisher<URL, Error> {
+    private func url(for path: String, parameters: Parameters?) throws -> URL {
         if let url = URL(string: path, relativeTo: Self.baseURL) {
             var components = URLComponents(url: url, resolvingAgainstBaseURL: true)
             if let parameters = parameters, !parameters.isEmpty {
@@ -144,10 +132,10 @@ class Service {
             }
             
             if let url = components?.url {
-                return .just(url)
+                return url
             }
         }
         
-        return .failure(ServiceError.invalidURL)
+        throw URLError(.badURL)
     }
 }

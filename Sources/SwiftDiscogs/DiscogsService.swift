@@ -6,34 +6,33 @@
 //
 
 import Foundation
-import Combine
 
 final class DiscogsService: Service {
     
     // MARK: - Functions
     
-    func getIdentity() -> AnyPublisher<RIdentity, Error> {
-        get("/oauth/identity")
+    func getIdentity() async throws -> RIdentity {
+        try await get("/oauth/identity")
     }
     
-    func getProfile(username: String) -> AnyPublisher<RProfile, Error> {
-        get("/users/\(username)")
+    func getProfile(username: String) async throws -> RProfile {
+        try await get("/users/\(username)")
     }
     
-    func getCollectionReleases(username: String, folderId: Int = 0) -> AnyPublisher<RCollectionReleases, Error> {
-        get("/users/\(username)/collection/folders/\(folderId)/releases")
+    func getCollectionReleases(username: String, folderId: Int = 0) async throws -> RCollectionReleases {
+        try await get("/users/\(username)/collection/folders/\(folderId)/releases")
     }
     
-    func getWantlistReleases(username: String, sort: Sorting, perPage: Int? = nil, nextPage: URL? = nil) -> AnyPublisher<RWantlistReleases, Error> {
+    func getWantlistReleases(username: String, sort: Sorting, perPage: Int? = nil, nextPage: URL? = nil) async throws -> RWantlistReleases {
         if let nextPage = nextPage {
-            return get(nextPage)
+            return try await get(nextPage)
         } else {
             var parameters = sort.parameters
             if let perPage = perPage {
                 parameters.append(("per_page", perPage))
             }
             
-            return get("/users/\(username)/wants", parameters: parameters)
+            return try await get("/users/\(username)/wants", parameters: parameters)
         }
     }
     
@@ -42,7 +41,7 @@ final class DiscogsService: Service {
     
     override func prepareAuthHeaders() throws -> [String] {
         guard let accessToken = accessToken else {
-            throw ServiceError.missingCredentials
+            throw URLError(.userAuthenticationRequired)
         }
         
         var headers = try super.prepareAuthHeaders()

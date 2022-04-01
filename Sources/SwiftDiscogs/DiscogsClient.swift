@@ -63,59 +63,48 @@ public final class DiscogsClient {
     
     // MARK: - Functions
     
-    public func authorize() -> AnyPublisher<URL, Error>  {
-        authService
-            .getAuthorizationURL()
-            .receive(on: DispatchQueue.main)
-            .eraseToAnyPublisher()
+    public func authorize() async throws -> URL  {
+        try await authService.getAuthorizationURL()
     }
     
-    public func handleCallback(verificationURL: URL) -> AnyPublisher<Void, Error> {
-        authService
-            .getAccessToken(verificationURL: verificationURL)
-            .receive(on: DispatchQueue.main)
-            .handleEvents(receiveOutput: { [weak self] in
-                self?.accessToken = $0
-            })
-            .map{ _ in () }
-            .eraseToAnyPublisher()
+    public func handleCallback(verificationURL: URL) async throws {
+        accessToken = try await authService.getAccessToken(verificationURL: verificationURL)
     }
     
-    public func getProfile() -> AnyPublisher<Profile, Error> {
-        getIdentity()
-            .flatMap{ self.getProfile(username: $0.username) }.eraseToAnyPublisher()
+    public func getProfile() async throws -> Profile {
+        let identity = try await getIdentity()
+        return try await getProfile(username: identity.username)
     }
     
-    public func getProfile(username: String) -> AnyPublisher<Profile, Error> {
-        service.getProfile(username: username).map(Profile.init).eraseToAnyPublisher()
+    public func getProfile(username: String) async throws -> Profile {
+        try await Profile(service.getProfile(username: username))
     }
     
-    public func getCollection() -> AnyPublisher<Pager<CollectionRelease>, Error> {
-        getIdentity()
-            .flatMap{ self.service.getCollectionReleases(username: $0.username) }
-            .map{ Pager($0.items.map(CollectionRelease.init), pagination: $0.pagination) }
-            .eraseToAnyPublisher()
+    public func getCollection() async throws -> Pager<CollectionRelease> {
+        let identity = try await getIdentity()
+        let response = try await service.getCollectionReleases(username: identity.username)
+        
+        return Pager(response.items.map(CollectionRelease.init), pagination: response.pagination)
     }
     
-    public func getWantlist(sort: Sorting = .added(.descending), perPage: Int? = nil, nextPage: URL? = nil) -> AnyPublisher<Pager<WantlistRelease>, Error> {
-        getIdentity()
-            .flatMap{ self.service.getWantlistReleases(username: $0.username, sort: sort, perPage: perPage, nextPage: nextPage) }
-            .map{ Pager($0.wants.map(WantlistRelease.init), pagination: $0.pagination) }
-            .eraseToAnyPublisher()
+    public func getWantlist(sort: Sorting = .added(.descending), perPage: Int? = nil, nextPage: URL? = nil) async throws -> Pager<WantlistRelease> {
+        let identity = try await getIdentity()
+        let response = try await service.getWantlistReleases(username: identity.username, sort: sort, perPage: perPage, nextPage: nextPage)
+        
+        return Pager(response.wants.map(WantlistRelease.init), pagination: response.pagination)
     }
     
     
     
     // MARK: - Private Functions
     
-    private func getIdentity() -> AnyPublisher<RIdentity, Error> {
+    private func getIdentity() async throws -> RIdentity {
         if let identity = identity {
-            return .just(identity)
+            return identity
         } else {
-            return service
-                .getIdentity()
-                .handleEvents(receiveOutput: { self.identity = $0 })
-                .eraseToAnyPublisher()
+            let identity = try await service.getIdentity()
+            self.identity = identity
+            return identity
         }
     }
 }
