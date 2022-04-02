@@ -98,6 +98,11 @@ public final class DiscogsClient {
         try await Release(service.getRelease(id: id))
     }
     
+    public func search(barcode: String) async throws -> Pager<SearchResult> {
+        let response = try await service.search(barcode: barcode)
+        return Pager(response.results.map(SearchResult.init), pagination: response.pagination)
+    }
+    
     
     
     // MARK: - Private Functions

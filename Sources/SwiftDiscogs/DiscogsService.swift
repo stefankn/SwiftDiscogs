@@ -40,7 +40,9 @@ final class DiscogsService: Service {
         try await get("/releases/\(id)")
     }
     
-    func search(barcode: String) async throws -> []
+    func search(barcode: String) async throws -> RSearchResults {
+        try await get("/database/search", parameters: [("barcode", barcode)])
+    }
     
     
     // MARK: Service Functions
