@@ -94,6 +94,10 @@ public final class DiscogsClient {
         return Pager(response.wants.map(WantlistRelease.init), pagination: response.pagination)
     }
     
+    public func getRelease(id: Int) async throws -> Release {
+        try await Release(service.getRelease(id: id))
+    }
+    
     
     
     // MARK: - Private Functions

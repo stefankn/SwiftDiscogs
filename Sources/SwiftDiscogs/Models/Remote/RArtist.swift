@@ -14,7 +14,7 @@ struct RArtist: Decodable {
     enum CodingKeys: String, CodingKey {
         case id
         case name
-        case thumbnail = "thumb"
+        case thumbnail = "thumbnail_url"
     }
     
     

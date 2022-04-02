@@ -12,6 +12,7 @@ struct RRelease: Decodable {
     // MARK: - Types
     
     enum CodingKeys: String, CodingKey {
+        case id
         case title
         case year
         case thumbnail = "thumb"
@@ -31,6 +32,7 @@ struct RRelease: Decodable {
     
     // MARK: - Properties
     
+    let id: Int
     let title: String
     let year: Int
     let thumbnail: String?

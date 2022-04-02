@@ -7,10 +7,11 @@
 
 import Foundation
 
-public struct Release {
+public struct Release: CustomStringConvertible {
     
     // MARK: - Properties
     
+    public let id: Int
     public let title: String
     public let year: Int
     public let thumbnailUrl: URL?
@@ -33,11 +34,31 @@ public struct Release {
         labels.map{ $0.catno }.joined(separator: ", ")
     }
     
+    public var formatsDescription: String {
+        formats.map{ "\($0)" }.joined(separator: ", ")
+    }
+    
+    public var genresDescription: String {
+        genres.joined(separator: ", ")
+    }
+    
+    public var stylesDescription: String {
+        styles.joined(separator: ", ")
+    }
+    
+    
+    // MARK: CustomStringConvertible Properties
+    
+    public var description: String {
+        "\(artistsDescription) - \(title)"
+    }
+    
     
     
     // MARK: - Construction
     
     init(_ release: RRelease) {
+        id = release.id
         title = release.title
         year = release.year
         thumbnailUrl = URL(release.thumbnail)

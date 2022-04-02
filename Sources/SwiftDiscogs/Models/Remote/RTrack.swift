@@ -13,7 +13,6 @@ struct RTrack: Decodable {
     
     enum CodingKeys: String, CodingKey {
         case position
-        case type
         case title
         case duration
         case extraArtists = "extraartists"
@@ -24,7 +23,6 @@ struct RTrack: Decodable {
     // MARK: - Properties
     
     let position: String
-    let type: String
     let title: String
     let duration: String
     let extraArtists: [RArtist]?

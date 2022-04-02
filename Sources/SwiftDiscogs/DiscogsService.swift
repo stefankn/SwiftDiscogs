@@ -36,6 +36,12 @@ final class DiscogsService: Service {
         }
     }
     
+    func getRelease(id: Int) async throws -> RRelease {
+        try await get("/releases/\(id)")
+    }
+    
+    func search(barcode: String) async throws -> []
+    
     
     // MARK: Service Functions
     

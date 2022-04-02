@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Format {
+public struct Format: CustomStringConvertible {
     
     // MARK: - Properties
     
@@ -15,6 +15,20 @@ public struct Format {
     public let quantity: String
     public let text: String?
     public let descriptions: [String]
+    
+    
+    // MARK: CustomStringConvertible Properties
+    
+    public var description: String {
+        var format: String
+        if let quantity = Int(quantity), quantity > 1 {
+            format = "\(quantity)x \(name)"
+        } else {
+            format = name
+        }
+        
+        return ([format] + descriptions).joined(separator: ", ")
+    }
     
     
     

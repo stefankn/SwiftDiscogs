@@ -15,7 +15,7 @@ extension RRelease {
         enum CodingKeys: String, CodingKey {
             case type
             case uri
-            case thumbnail = "uri_150"
+            case thumbnail = "uri150"
         }
         
         
@@ -23,7 +23,7 @@ extension RRelease {
         // MARK: - Properties
         
         let type: String
-        let uri: String
+        let uri: String?
         let thumbnail: String
     }
 }

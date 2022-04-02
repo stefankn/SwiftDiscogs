@@ -12,7 +12,6 @@ public struct Track {
     // MARK: - Properties
     
     public let position: String
-    public let type: String
     public let title: String
     public let duration: String
     public let extraArtists: [Artist]
@@ -23,7 +22,6 @@ public struct Track {
     
     init(_ track: RTrack) {
         position = track.position
-        type = track.type
         title = track.title
         duration = track.duration
         extraArtists = track.extraArtists?.map(Artist.init) ?? []
