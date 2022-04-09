@@ -94,9 +94,9 @@ public final class DiscogsClient {
         return Pager(response.wants.map(WantlistRelease.init), pagination: response.pagination)
     }
     
-    public func addToWantlist(releaseId: Int) async throws {
+    public func addToWantlist(releaseId: Int) async throws -> WantlistRelease {
         let identity = try await getIdentity()
-        try await service.addToWantlist(username: identity.username, releaseId: releaseId)
+        return try await WantlistRelease(service.addToWantlist(username: identity.username, releaseId: releaseId))
     }
     
     public func removeFromWantlist(releaseId: Int) async throws {
@@ -104,9 +104,9 @@ public final class DiscogsClient {
         try await service.removeFromWantlist(username: identity.username, releaseId: releaseId)
     }
     
-    public func addToCollection(releaseId: Int, folderId: Int = 1) async throws {
+    public func addToCollection(releaseId: Int, folderId: Int = 1) async throws -> CollectionRelease {
         let identity = try await getIdentity()
-        try await service.addToCollection(username: identity.username, releaseId: releaseId, folderId: folderId)
+        return try await CollectionRelease(service.addToCollection(username: identity.username, releaseId: releaseId, folderId: folderId))
     }
     
     public func removeFromCollection(releaseId: Int, instanceId: Int, folderId: Int = 1) async throws {

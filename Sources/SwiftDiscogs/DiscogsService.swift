@@ -48,20 +48,20 @@ final class DiscogsService: Service {
         try await get(nextPage)
     }
     
-    func addToWantlist(username: String, releaseId: Int) async throws {
-        try await post("/users/\(username)/wants/\(releaseId)")
+    func addToWantlist(username: String, releaseId: Int) async throws -> RWantlistRelease {
+        try await put("/users/\(username)/wants/\(releaseId)")
     }
     
     func removeFromWantlist(username: String, releaseId: Int) async throws {
         try await delete("/users/\(username)/wants/\(releaseId)")
     }
     
-    func addToCollection(username: String, releaseId: Int, folderId: Int) async throws {
+    func addToCollection(username: String, releaseId: Int, folderId: Int) async throws -> RCollectionRelease {
         try await post("/users/\(username)/collection/folders/\(folderId)/releases/\(releaseId)")
     }
     
     func removeFromCollection(username: String, releaseId: Int, instanceId: Int, folderId: Int) async throws {
-        try await delete("/users/\(username)/collection/folders/\(folderId)/releases/\(releaseId)")
+        try await delete("/users/\(username)/collection/folders/\(folderId)/releases/\(releaseId)/instances/\(instanceId)")
     }
     
     

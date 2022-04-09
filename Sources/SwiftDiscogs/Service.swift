@@ -79,12 +79,28 @@ class Service {
         try await request(URLRequest(method: .get, url: url), headers: headers, decode: decode)
     }
     
+    final func post<Response: Decodable>(_ path: String, parameters: Parameters? = nil, headers: [String] = []) async throws -> Response {
+        try await post(path, parameters: parameters, headers: headers, decode: decode)
+    }
+    
     final func post<Response>(_ path: String, parameters: Parameters? = nil, headers: [String] = [], decode: @escaping (Data) throws -> Response) async throws -> Response {
         try await request(URLRequest(method: .post, url: url(for: path, parameters: parameters)), headers: headers, decode: decode)
     }
     
     final func post(_ path: String, parameters: Parameters? = nil, headers: [String] = []) async throws {
         try await post(path, parameters: parameters, headers: headers, decode: { _ in })
+    }
+    
+    final func put<Response: Decodable>(_ path: String, parameters: Parameters? = nil, headers: [String] = []) async throws -> Response {
+        try await put(path, parameters: parameters, headers: headers, decode: decode)
+    }
+    
+    final func put<Response>(_ path: String, parameters: Parameters? = nil, headers: [String] = [], decode: @escaping (Data) throws -> Response) async throws -> Response {
+        try await request(URLRequest(method: .put, url: url(for: path, parameters: parameters)), headers: headers, decode: decode)
+    }
+    
+    final func put(_ path: String, parameters: Parameters? = nil, headers: [String] = []) async throws {
+        try await put(path, parameters: parameters, headers: headers, decode: { _ in })
     }
     
     final func delete(_ path: String, parameters: Parameters? = nil, headers: [String] = []) async throws {

@@ -26,6 +26,6 @@ public struct CollectionRelease: Identifiable {
         instanceId = collectionRelease.instanceId
         folderId = collectionRelease.folderId
         release = Release(collectionRelease.release)
-        notes = collectionRelease.notes.map(CollectionRelease.Note.init)
+        notes = collectionRelease.notes?.map(CollectionRelease.Note.init) ?? []
     }
 }

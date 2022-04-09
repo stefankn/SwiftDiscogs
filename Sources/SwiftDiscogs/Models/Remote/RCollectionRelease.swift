@@ -27,5 +27,5 @@ struct RCollectionRelease: Decodable {
     let instanceId: Int
     let folderId: Int
     let release: RRelease
-    let notes: [Note]
+    let notes: [Note]?
 }
