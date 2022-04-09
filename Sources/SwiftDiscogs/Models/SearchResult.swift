@@ -13,7 +13,7 @@ public struct SearchResult: Identifiable {
     
     public let id: Int
     public let title: String
-    public let year: String
+    public let year: String?
     public let catno: String
     public let format: [String]
     public let genre: [String]

@@ -28,7 +28,7 @@ public struct RSearchResult: Decodable {
     
     let id: Int
     let title: String
-    let year: String
+    let year: String?
     let catno: String
     let format: [String]
     let genre: [String]

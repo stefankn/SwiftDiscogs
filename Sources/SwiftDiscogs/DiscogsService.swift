@@ -40,8 +40,28 @@ final class DiscogsService: Service {
         try await get("/releases/\(id)")
     }
     
-    func search(barcode: String) async throws -> RSearchResults {
-        try await get("/database/search", parameters: [("barcode", barcode)])
+    func search(query: String, perPage: Int? = nil) async throws -> RSearchResults {
+        try await get("/database/search", parameters: [("query", query), ("type", "release")])
+    }
+    
+    func search(nextPage: URL) async throws -> RSearchResults {
+        try await get(nextPage)
+    }
+    
+    func addToWantlist(username: String, releaseId: Int) async throws {
+        try await post("/users/\(username)/wants/\(releaseId)")
+    }
+    
+    func removeFromWantlist(username: String, releaseId: Int) async throws {
+        try await delete("/users/\(username)/wants/\(releaseId)")
+    }
+    
+    func addToCollection(username: String, releaseId: Int, folderId: Int) async throws {
+        try await post("/users/\(username)/collection/folders/\(folderId)/releases/\(releaseId)")
+    }
+    
+    func removeFromCollection(username: String, releaseId: Int, instanceId: Int, folderId: Int) async throws {
+        try await delete("/users/\(username)/collection/folders/\(folderId)/releases/\(releaseId)")
     }
     
     

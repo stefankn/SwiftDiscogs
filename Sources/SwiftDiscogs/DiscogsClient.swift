@@ -94,12 +94,37 @@ public final class DiscogsClient {
         return Pager(response.wants.map(WantlistRelease.init), pagination: response.pagination)
     }
     
+    public func addToWantlist(releaseId: Int) async throws {
+        let identity = try await getIdentity()
+        try await service.addToWantlist(username: identity.username, releaseId: releaseId)
+    }
+    
+    public func removeFromWantlist(releaseId: Int) async throws {
+        let identity = try await getIdentity()
+        try await service.removeFromWantlist(username: identity.username, releaseId: releaseId)
+    }
+    
+    public func addToCollection(releaseId: Int, folderId: Int = 1) async throws {
+        let identity = try await getIdentity()
+        try await service.addToCollection(username: identity.username, releaseId: releaseId, folderId: folderId)
+    }
+    
+    public func removeFromCollection(releaseId: Int, instanceId: Int, folderId: Int = 1) async throws {
+        let identity = try await getIdentity()
+        try await service.removeFromCollection(username: identity.username, releaseId: releaseId, instanceId: instanceId, folderId: folderId)
+    }
+    
     public func getRelease(id: Int) async throws -> Release {
         try await Release(service.getRelease(id: id))
     }
     
-    public func search(barcode: String) async throws -> Pager<SearchResult> {
-        let response = try await service.search(barcode: barcode)
+    public func search(query: String, perPage: Int? = nil) async throws -> Pager<SearchResult> {
+        let response = try await service.search(query: query, perPage: perPage)
+        return Pager(response.results.map(SearchResult.init), pagination: response.pagination)
+    }
+    
+    public func search(nextPage: URL) async throws -> Pager<SearchResult> {
+        let response = try await service.search(nextPage: nextPage)
         return Pager(response.results.map(SearchResult.init), pagination: response.pagination)
     }
     

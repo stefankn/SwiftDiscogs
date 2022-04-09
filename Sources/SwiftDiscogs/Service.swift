@@ -83,6 +83,14 @@ class Service {
         try await request(URLRequest(method: .post, url: url(for: path, parameters: parameters)), headers: headers, decode: decode)
     }
     
+    final func post(_ path: String, parameters: Parameters? = nil, headers: [String] = []) async throws {
+        try await post(path, parameters: parameters, headers: headers, decode: { _ in })
+    }
+    
+    final func delete(_ path: String, parameters: Parameters? = nil, headers: [String] = []) async throws {
+        try await request(URLRequest(method: .delete, url: url(for: path, parameters: parameters)), headers: headers, decode: { _ in })
+    }
+    
     func prepareAuthHeaders() throws -> [String] {
         [
             #"OAuth oauth_consumer_key="\#(consumerKey)""#,
