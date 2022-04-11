@@ -80,9 +80,9 @@ public final class DiscogsClient {
         try await Profile(service.getProfile(username: username))
     }
     
-    public func getCollection() async throws -> Pager<CollectionRelease> {
+    public func getCollection(sort: Sorting = .added(.descending), perPage: Int? = nil, nextPage: URL? = nil) async throws -> Pager<CollectionRelease> {
         let identity = try await getIdentity()
-        let response = try await service.getCollectionReleases(username: identity.username)
+        let response = try await service.getCollectionReleases(username: identity.username, sort: sort, perPage: perPage, nextPage: nextPage)
         
         return Pager(response.items.map(CollectionRelease.init), pagination: response.pagination)
     }

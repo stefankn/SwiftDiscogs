@@ -19,8 +19,17 @@ final class DiscogsService: Service {
         try await get("/users/\(username)")
     }
     
-    func getCollectionReleases(username: String, folderId: Int = 0) async throws -> RCollectionReleases {
-        try await get("/users/\(username)/collection/folders/\(folderId)/releases")
+    func getCollectionReleases(username: String, sort: Sorting, folderId: Int = 0, perPage: Int? = nil, nextPage: URL? = nil) async throws -> RCollectionReleases {
+        if let nextPage = nextPage {
+            return try await get(nextPage)
+        } else {
+            var parameters = sort.parameters
+            if let perPage = perPage {
+                parameters.append(("per_page", perPage))
+            }
+            
+            return try await get("/users/\(username)/collection/folders/\(folderId)/releases", parameters: parameters)
+        }
     }
     
     func getWantlistReleases(username: String, sort: Sorting, perPage: Int? = nil, nextPage: URL? = nil) async throws -> RWantlistReleases {
