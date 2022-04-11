@@ -14,6 +14,8 @@ public struct Profile {
     public let id: Int
     public let username: String
     public let avatarURL: URL?
+    public let collectionCount: Int
+    public let wantlistCount: Int
     
     
     
@@ -23,6 +25,8 @@ public struct Profile {
         id = profile.id
         username = profile.username
         avatarURL = URL(profile.avatarURL)
+        collectionCount = profile.collectionCount
+        wantlistCount = profile.wantlistCount
     }
     
 }

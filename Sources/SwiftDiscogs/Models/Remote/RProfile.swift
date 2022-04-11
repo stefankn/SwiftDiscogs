@@ -15,6 +15,8 @@ struct RProfile: Decodable {
         case id
         case username
         case avatarURL = "avatar_url"
+        case collectionCount = "num_collection"
+        case wantlistCount = "num_wantlist"
     }
     
     
@@ -24,4 +26,6 @@ struct RProfile: Decodable {
     let id: Int
     let username: String
     let avatarURL: String?
+    let collectionCount: Int
+    let wantlistCount: Int
 }
