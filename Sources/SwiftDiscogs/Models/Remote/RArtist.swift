@@ -15,6 +15,7 @@ struct RArtist: Decodable {
         case id
         case name
         case thumbnail = "thumbnail_url"
+        case role
     }
     
     
@@ -24,4 +25,5 @@ struct RArtist: Decodable {
     let id: Int
     let name: String
     let thumbnail: String?
+    let role: String?
 }

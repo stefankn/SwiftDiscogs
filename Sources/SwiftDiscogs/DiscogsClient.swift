@@ -27,8 +27,10 @@ public final class DiscogsClient {
     private var accessToken: AccessToken? {
         get { service.accessToken }
         set {
-            service.accessToken = newValue
-            isAuthorized.send(newValue != nil)
+            DispatchQueue.main.async {
+                self.service.accessToken = newValue
+                self.isAuthorized.send(newValue != nil)
+            }
         }
     }
     

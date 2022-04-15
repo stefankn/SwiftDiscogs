@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Track {
+public struct Track: Identifiable {
     
     // MARK: - Properties
     
@@ -15,6 +15,13 @@ public struct Track {
     public let title: String
     public let duration: String
     public let extraArtists: [Artist]
+    
+    
+    // MARK: Identifiable Properties
+    
+    public var id: String {
+        position
+    }
     
     
     
