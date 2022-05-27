@@ -7,14 +7,21 @@
 
 import Foundation
 
-public struct Video {
+public struct Video: Identifiable {
     
     // MARK: - Properties
     
-    let url: URL
-    let title: String
-    let description: String
-    let duration: Int
+    public let url: URL
+    public let title: String
+    public let description: String
+    public let duration: Int
+    
+    
+    // MARK: Identifiable Properties
+    
+    public var id: URL {
+        url
+    }
     
     
     
