@@ -25,7 +25,7 @@ struct RRelease: Decodable {
         case identifiers
         case tracks = "tracklist"
         case images
-        case note
+        case notes
     }
     
     
@@ -45,5 +45,5 @@ struct RRelease: Decodable {
     let identifiers: [RIdentifier]?
     let tracks: [RTrack]?
     let images: [Image]?
-    let note: String?
+    let notes: String?
 }

@@ -24,7 +24,7 @@ public struct Release: CustomStringConvertible {
     public let identifiers: [Identifier]
     public let tracks: [Track]
     public let images: [Image]
-    public let note: String?
+    public let notes: String?
     
     public var artistsDescription: String {
         artists.map{ $0.name }.joined(separator: ", ")
@@ -71,6 +71,6 @@ public struct Release: CustomStringConvertible {
         identifiers = release.identifiers?.map(Identifier.init) ?? []
         tracks = release.tracks?.map(Track.init) ?? []
         images = release.images?.compactMap(Image.init) ?? []
-        note = release.note
+        notes = release.notes
     }
 }
