@@ -8,13 +8,20 @@
 import Foundation
 
 extension Release {
-    public struct Image {
+    public struct Image: Identifiable {
         
         // MARK: - Properties
         
-        let type: String
-        let url: URL
-        let thumbnail: URL
+        public let type: String
+        public let url: URL
+        public let thumbnail: URL
+        
+        
+        // MARK: Identifiable Properties
+        
+        public var id: URL {
+            url
+        }
         
         
         
