@@ -7,16 +7,8 @@
 
 import Foundation
 
-public struct Sorting: Hashable, CaseIterable, Codable {
+public struct Sorting: Hashable, Identifiable, Codable {
     
-    // MARK: - Constants
-    
-    public static var allCases: [Sorting] {
-        Key.allCases.flatMap{ key in Order.allCases.map{ Sorting(key: key, order: $0) } }
-    }
-    
-    
-
     // MARK: - Types
     
     public enum Key: String, CaseIterable, Codable {
@@ -42,6 +34,22 @@ public struct Sorting: Hashable, CaseIterable, Codable {
             ("sort", key.rawValue),
             ("sort_order", order.rawValue)
         ]
+    }
+    
+    
+    // MARK: Identifiable Properties
+    
+    public var id: String {
+        key.rawValue + order.rawValue
+    }
+    
+    
+    
+    // MARK: - Construction
+    
+    public init(key: Key, order: Order) {
+        self.key = key
+        self.order = order
     }
     
     
