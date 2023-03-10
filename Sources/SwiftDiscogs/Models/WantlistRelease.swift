@@ -7,19 +7,19 @@
 
 import Foundation
 
-public struct WantlistRelease: Identifiable {
+public struct WantlistRelease: Decodable, Identifiable {
+    
+    // MARK: - Types
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case release = "basic_information"
+    }
+    
+    
     
     // MARK: - Properties
     
     public let id: Int
     public let release: Release
-    
-    
-    
-    // MARK: - Construction
-    
-    init(_ wantlistRelease: RWantlistRelease) {
-        id = wantlistRelease.id
-        release = Release(wantlistRelease.release)
-    }
 }

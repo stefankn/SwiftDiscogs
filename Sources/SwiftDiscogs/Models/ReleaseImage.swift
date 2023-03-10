@@ -8,33 +8,40 @@
 import Foundation
 
 extension Release {
-    public struct Image: Identifiable {
+    public struct Image: Decodable, Identifiable {
+        
+        // MARK: - Types
+        
+        enum CodingKeys: String, CodingKey {
+            case type
+            case uri
+            case thumbnail = "uri150"
+        }
+        
+        
+        // MARK: - Private Properties
+        
+        private let uri: String?
+        private let thumbnail: String
+        
+        
         
         // MARK: - Properties
         
         public let type: String
-        public let url: URL
-        public let thumbnail: URL
+        public var url: URL? {
+            URL(uri)
+        }
+        
+        public var thumbnailURL: URL? {
+            URL(thumbnail)
+        }
         
         
         // MARK: Identifiable Properties
         
-        public var id: URL {
-            url
-        }
-        
-        
-        
-        // MARK: - Construction
-        
-        init?(_ image: RRelease.Image) {
-            if let url = URL(image.uri), let thumbnail = URL(image.thumbnail) {
-                type = image.type
-                self.url = url
-                self.thumbnail = thumbnail
-            } else {
-                return nil
-            }
+        public var id: String {
+            thumbnail
         }
     }
 }

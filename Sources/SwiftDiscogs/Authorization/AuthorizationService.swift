@@ -6,22 +6,41 @@
 //
 
 import Foundation
+import SwiftCore
 
 final class AuthorizationService: Service {
 
     // MARK: - Private Properties
     
     private let callbackURL: String
+    private var authToken: String?
+    private var authVerifier: String?
     private var authSecret: String?
+    
+    
+    
+    // MARK: - Properties
+    
+    let userAgent: String
+    let consumerKey: String
+    let consumerSecret: String
+    
+    
+    // MARK: Service Properties
+    
+    override var baseURL: URL? {
+        URL(string: "https://api.discogs.com")
+    }
     
     
     
     // MARK: - Construction
     
     init(userAgent: String, consumerKey: String, consumerSecret: String, callbackURL: String) {
+        self.userAgent = userAgent
+        self.consumerKey = consumerKey
+        self.consumerSecret = consumerSecret
         self.callbackURL = callbackURL
-        
-        super.init(userAgent: userAgent, consumerKey: consumerKey, consumerSecret: consumerSecret)
     }
     
     
@@ -29,12 +48,7 @@ final class AuthorizationService: Service {
     // MARK: - Functions
     
     func getAuthorizationURL() async throws -> URL {
-        let headers = [
-            #"oauth_signature="\#(consumerSecret)&""#,
-            #"oauth_callback="\#(callbackURL)""#
-        ]
-        
-        return try await get("/oauth/request_token", headers: headers, decode: generateAuthorizationURL)
+        try await get("/oauth/request_token", decode: generateAuthorizationURL)
     }
     
     func getAccessToken(verificationURL: URL) async throws -> AccessToken {
@@ -44,13 +58,11 @@ final class AuthorizationService: Service {
             let authVerifier = components.queryItems?.first(where: { $0.name == "oauth_verifier" })?.value,
             let authSecret = authSecret {
             
-            let headers = [
-                #"oauth_token="\#(authToken)""#,
-                #"oauth_signature="\#(consumerSecret)&\#(authSecret)""#,
-                #"oauth_verifier="\#(authVerifier)""#
-            ]
+            self.authToken = authToken
+            self.authVerifier = authVerifier
+            self.authSecret = authSecret
             
-            return try await post("/oauth/access_token", headers: headers, decode: parseAccessTokenResponse)
+            return try await post("/oauth/access_token", decode: parseAccessTokenResponse)
         } else {
             throw URLError(.badServerResponse)
         }
@@ -59,9 +71,31 @@ final class AuthorizationService: Service {
     
     // MARK: Service Functions
     
-    override func prepare(_ request: URLRequest) throws -> URLRequest {
-        var request = try super.prepare(request)
+    override func prepare(_ request: URLRequest) async throws -> URLRequest {
+        var request = request
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        
+        var headers = [
+            #"OAuth oauth_consumer_key="\#(consumerKey)""#,
+            #"oauth_nonce="\#(UUID().uuidString)""#,
+            #"oauth_signature_method="PLAINTEXT""#,
+            #"oauth_timestamp="\#(Int(Date.now.timeIntervalSince1970))""#,
+        ]
+        
+        if let authToken = authToken, let authSecret = authSecret, let authVerifier = authVerifier {
+            headers += [
+                #"oauth_token="\#(authToken)""#,
+                #"oauth_signature="\#(consumerSecret)&\#(authSecret)""#,
+                #"oauth_verifier="\#(authVerifier)""#
+            ]
+        } else {
+            headers += [
+                #"oauth_signature="\#(consumerSecret)&""#,
+                #"oauth_callback="\#(callbackURL)""#
+            ]
+        }
+        request.setValue(headers.joined(separator: ", "), forHTTPHeaderField: "Authorization")
+        
         return request
     }
     

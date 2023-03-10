@@ -23,7 +23,7 @@ public final class DiscogsClient {
     private let appName: String
     private let appVersion: String
     
-    private var identity: RIdentity?
+    private var identity: Identity?
     private var accessToken: AccessToken? {
         get { service.accessToken }
         set {
@@ -79,26 +79,31 @@ public final class DiscogsClient {
     }
     
     public func getProfile(username: String) async throws -> Profile {
-        try await Profile(service.getProfile(username: username))
+        try await service.getProfile(username: username)
+    }
+    
+    public func getCollectionFolders() async throws -> [CollectionFolder] {
+        let identity = try await getIdentity()
+        return try await service.getCollectionFolders(username: identity.username)
     }
     
     public func getCollection(sort: Sorting = .added(.descending), perPage: Int? = nil, nextPage: URL? = nil) async throws -> Pager<CollectionRelease> {
         let identity = try await getIdentity()
         let response = try await service.getCollectionReleases(username: identity.username, sort: sort, perPage: perPage, nextPage: nextPage)
         
-        return Pager(response.items.map(CollectionRelease.init), pagination: response.pagination)
+        return Pager(response.items, pagination: response.pagination)
     }
     
     public func getWantlist(sort: Sorting = .added(.descending), perPage: Int? = nil, nextPage: URL? = nil) async throws -> Pager<WantlistRelease> {
         let identity = try await getIdentity()
         let response = try await service.getWantlistReleases(username: identity.username, sort: sort, perPage: perPage, nextPage: nextPage)
         
-        return Pager(response.wants.map(WantlistRelease.init), pagination: response.pagination)
+        return Pager(response.wants, pagination: response.pagination)
     }
     
     public func addToWantlist(releaseId: Int) async throws -> WantlistRelease {
         let identity = try await getIdentity()
-        return try await WantlistRelease(service.addToWantlist(username: identity.username, releaseId: releaseId))
+        return try await service.addToWantlist(username: identity.username, releaseId: releaseId)
     }
     
     public func removeFromWantlist(releaseId: Int) async throws {
@@ -108,7 +113,7 @@ public final class DiscogsClient {
     
     public func addToCollection(releaseId: Int, folderId: Int = 1) async throws -> CollectionRelease {
         let identity = try await getIdentity()
-        return try await CollectionRelease(service.addToCollection(username: identity.username, releaseId: releaseId, folderId: folderId))
+        return try await service.addToCollection(username: identity.username, releaseId: releaseId, folderId: folderId)
     }
     
     public func removeFromCollection(releaseId: Int, instanceId: Int, folderId: Int = 1) async throws {
@@ -117,24 +122,24 @@ public final class DiscogsClient {
     }
     
     public func getRelease(id: Int) async throws -> Release {
-        try await Release(service.getRelease(id: id))
+        try await service.getRelease(id: id)
     }
     
     public func search(query: String, perPage: Int? = nil) async throws -> Pager<SearchResult> {
         let response = try await service.search(query: query, perPage: perPage)
-        return Pager(response.results.map(SearchResult.init), pagination: response.pagination)
+        return Pager(response.results, pagination: response.pagination)
     }
     
     public func search(nextPage: URL) async throws -> Pager<SearchResult> {
         let response = try await service.search(nextPage: nextPage)
-        return Pager(response.results.map(SearchResult.init), pagination: response.pagination)
+        return Pager(response.results, pagination: response.pagination)
     }
     
     
     
     // MARK: - Private Functions
     
-    private func getIdentity() async throws -> RIdentity {
+    private func getIdentity() async throws -> Identity {
         if let identity = identity {
             return identity
         } else {

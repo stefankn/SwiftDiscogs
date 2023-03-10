@@ -7,14 +7,29 @@
 
 import Foundation
 
-public struct Artist: CustomStringConvertible, Hashable {
+public struct Artist: Decodable, CustomStringConvertible, Hashable {
+    
+    // MARK: - Types
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case thumbnail = "thumbnail_url"
+        case role
+    }
+    
+    
     
     // MARK: - Properties
     
     public let id: Int
     public let name: String
-    public let thumbnail: URL?
+    public let thumbnail: String?
     public let role: String?
+    
+    public var thumbnailURL: URL? {
+        URL(thumbnail)
+    }
     
     
     // MARK: CustomStringConvertible Properties
@@ -25,16 +40,5 @@ public struct Artist: CustomStringConvertible, Hashable {
         } else {
             return name
         }
-    }
-    
-    
-    
-    // MARK: - Construction
-    
-    init(_ artist: RArtist) {
-        id = artist.id
-        name = artist.name
-        thumbnail = URL(artist.thumbnail)
-        role = artist.role
     }
 }

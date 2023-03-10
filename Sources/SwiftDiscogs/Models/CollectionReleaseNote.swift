@@ -8,20 +8,20 @@
 import Foundation
 
 extension CollectionRelease {
-    public struct Note {
+    public struct Note: Decodable {
+        
+        // MARK: - Types
+        
+        enum CodingKeys: String, CodingKey {
+            case fieldId = "field_id"
+            case value
+        }
+        
+        
         
         // MARK: - Properties
         
         public let fieldId: Int
         public let value: String
-        
-        
-        
-        // MARK: - Construction
-        
-        init(_ note: RCollectionRelease.Note) {
-            fieldId = note.fieldId
-            value = note.value
-        }
     }
 }

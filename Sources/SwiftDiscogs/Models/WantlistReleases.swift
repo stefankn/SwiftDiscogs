@@ -1,5 +1,5 @@
 //
-//  RWantlistReleases.swift
+//  WantlistReleases.swift
 //  
 //
 //  Created by Stefan Klein Nulent on 21/03/2022.
@@ -7,10 +7,10 @@
 
 import Foundation
 
-struct RWantlistReleases: Decodable {
+struct WantlistReleases: Decodable {
     
     // MARK: - Properties
     
     let pagination: Pagination
-    let wants: [RWantlistRelease]
+    let wants: [WantlistRelease]
 }

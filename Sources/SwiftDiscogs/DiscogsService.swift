@@ -6,20 +6,70 @@
 //
 
 import Foundation
+import SwiftCore
 
 final class DiscogsService: Service {
     
+    // MARK: - Properties
+    
+    let userAgent: String
+    let consumerKey: String
+    let consumerSecret: String
+    
+    var accessToken: AccessToken? {
+        didSet {
+            if
+                let accessToken = accessToken,
+                let data = try? JSONEncoder().encode(accessToken) {
+
+                UserDefaults.standard.set(data, for: .accessToken)
+            } else {
+                UserDefaults.standard.remove(for: .accessToken)
+            }
+        }
+    }
+    
+    
+    // MARK: Service Properties
+    
+    override var baseURL: URL? {
+        URL(string: "https://api.discogs.com")
+    }
+    
+    
+    
+    // MARK: - Construction
+    
+    init(userAgent: String, consumerKey: String, consumerSecret: String) {
+        self.userAgent = userAgent
+        self.consumerKey = consumerKey
+        self.consumerSecret = consumerSecret
+
+        if
+            let data = UserDefaults.standard.data(for: .accessToken),
+            let accessToken = try? JSONDecoder().decode(AccessToken.self, from: data) {
+
+            self.accessToken = accessToken
+        }
+    }
+    
+    
+    
     // MARK: - Functions
     
-    func getIdentity() async throws -> RIdentity {
+    func getIdentity() async throws -> Identity {
         try await get("/oauth/identity")
     }
     
-    func getProfile(username: String) async throws -> RProfile {
+    func getProfile(username: String) async throws -> Profile {
         try await get("/users/\(username)")
     }
     
-    func getCollectionReleases(username: String, sort: Sorting, folderId: Int = 0, perPage: Int? = nil, nextPage: URL? = nil) async throws -> RCollectionReleases {
+    func getCollectionFolders(username: String) async throws -> [CollectionFolder] {
+        try await get("/users/\(username)/collection/folders")
+    }
+    
+    func getCollectionReleases(username: String, sort: Sorting, folderId: Int = 0, perPage: Int? = nil, nextPage: URL? = nil) async throws -> CollectionReleases {
         if let nextPage = nextPage {
             return try await get(nextPage)
         } else {
@@ -32,7 +82,7 @@ final class DiscogsService: Service {
         }
     }
     
-    func getWantlistReleases(username: String, sort: Sorting, perPage: Int? = nil, nextPage: URL? = nil) async throws -> RWantlistReleases {
+    func getWantlistReleases(username: String, sort: Sorting, perPage: Int? = nil, nextPage: URL? = nil) async throws -> WantlistReleases {
         if let nextPage = nextPage {
             return try await get(nextPage)
         } else {
@@ -45,19 +95,19 @@ final class DiscogsService: Service {
         }
     }
     
-    func getRelease(id: Int) async throws -> RRelease {
+    func getRelease(id: Int) async throws -> Release {
         try await get("/releases/\(id)")
     }
     
-    func search(query: String, perPage: Int? = nil) async throws -> RSearchResults {
+    func search(query: String, perPage: Int? = nil) async throws -> SearchResults {
         try await get("/database/search", parameters: [("query", query), ("type", "release")])
     }
     
-    func search(nextPage: URL) async throws -> RSearchResults {
+    func search(nextPage: URL) async throws -> SearchResults {
         try await get(nextPage)
     }
     
-    func addToWantlist(username: String, releaseId: Int) async throws -> RWantlistRelease {
+    func addToWantlist(username: String, releaseId: Int) async throws -> WantlistRelease {
         try await put("/users/\(username)/wants/\(releaseId)")
     }
     
@@ -65,7 +115,7 @@ final class DiscogsService: Service {
         try await delete("/users/\(username)/wants/\(releaseId)")
     }
     
-    func addToCollection(username: String, releaseId: Int, folderId: Int) async throws -> RCollectionRelease {
+    func addToCollection(username: String, releaseId: Int, folderId: Int) async throws -> CollectionRelease {
         try await post("/users/\(username)/collection/folders/\(folderId)/releases/\(releaseId)")
     }
     
@@ -76,24 +126,24 @@ final class DiscogsService: Service {
     
     // MARK: Service Functions
     
-    override func prepareAuthHeaders() throws -> [String] {
+    override func prepare(_ request: URLRequest) async throws -> URLRequest {
         guard let accessToken = accessToken else {
             throw URLError(.userAuthenticationRequired)
         }
         
-        var headers = try super.prepareAuthHeaders()
-        
-        headers += [
+        var request = request
+        request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
+
+        let headers = [
+            #"OAuth oauth_consumer_key="\#(consumerKey)""#,
+            #"oauth_nonce="\#(UUID().uuidString)""#,
+            #"oauth_signature_method="PLAINTEXT""#,
+            #"oauth_timestamp="\#(Int(Date.now.timeIntervalSince1970))""#,
             #"oauth_token="\#(accessToken.token)""#,
             #"oauth_signature="\#(consumerSecret)&\#(accessToken.secret)""#
         ]
+        request.setValue(headers.joined(separator: ", "), forHTTPHeaderField: "Authorization")
         
-        return headers
-    }
-    
-    override func prepare(_ request: URLRequest) throws -> URLRequest {
-        var request = try super.prepare(request)
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         return request
     }
 }

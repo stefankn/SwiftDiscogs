@@ -7,19 +7,10 @@
 
 import Foundation
 
-public struct Label {
+public struct Label: Decodable {
     
     // MARK: - Properties
     
     let name: String
     let catno: String
-    
-    
-    
-    // MARK: - Construction
-    
-    init(_ label: RLabel) {
-        name = label.name
-        catno = label.catno
-    }
 }

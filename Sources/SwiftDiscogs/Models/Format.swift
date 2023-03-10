@@ -7,14 +7,25 @@
 
 import Foundation
 
-public struct Format: CustomStringConvertible {
+public struct Format: Decodable, CustomStringConvertible {
+    
+    // MARK: - Types
+    
+    enum CodingKeys: String, CodingKey {
+        case name
+        case quantity = "qty"
+        case text
+        case descriptions
+    }
+    
+    
     
     // MARK: - Properties
     
     public let name: String
     public let quantity: String
     public let text: String?
-    public let descriptions: [String]
+    public let descriptions: [String]?
     
     
     // MARK: CustomStringConvertible Properties
@@ -27,17 +38,6 @@ public struct Format: CustomStringConvertible {
             format = name
         }
         
-        return ([format] + descriptions).joined(separator: ", ")
-    }
-    
-    
-    
-    // MARK: - Construction
-    
-    init(_ format: RFormat) {
-        name = format.name
-        quantity = format.quantity
-        text = format.text
-        descriptions = format.descriptions ?? []
+        return ([format] + (descriptions ?? [])).joined(separator: ", ")
     }
 }

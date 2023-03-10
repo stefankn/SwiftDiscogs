@@ -7,21 +7,11 @@
 
 import Foundation
 
-public struct Identifier {
+public struct Identifier: Decodable {
     
     // MARK: - Properties
     
     let type: String
     let value: String
     let description: String?
-    
-    
-    
-    // MARK: - Construction
-    
-    init(_ identifier: RIdentifier) {
-        type = identifier.type
-        value = identifier.value
-        description = identifier.description
-    }
 }

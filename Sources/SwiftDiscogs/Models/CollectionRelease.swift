@@ -7,7 +7,19 @@
 
 import Foundation
 
-public struct CollectionRelease: Identifiable {
+public struct CollectionRelease: Decodable, Identifiable {
+    
+    // MARK: - Types
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case instanceId = "instance_id"
+        case folderId = "folder_id"
+        case release = "basic_information"
+        case notes
+    }
+    
+    
     
     // MARK: - Properties
     
@@ -15,17 +27,5 @@ public struct CollectionRelease: Identifiable {
     public let instanceId: Int
     public let folderId: Int
     public let release: Release
-    public let notes: [Note]
-    
-    
-    
-    // MARK: - Construction
-    
-    init(_ collectionRelease: RCollectionRelease) {
-        id = collectionRelease.id
-        instanceId = collectionRelease.instanceId
-        folderId = collectionRelease.folderId
-        release = Release(collectionRelease.release)
-        notes = collectionRelease.notes?.map(CollectionRelease.Note.init) ?? []
-    }
+    public let notes: [Note]?
 }

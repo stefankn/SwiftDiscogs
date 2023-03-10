@@ -1,5 +1,5 @@
 //
-//  RWantlistRelease.swift
+//  CollectionReleases.swift
 //  
 //
 //  Created by Stefan Klein Nulent on 21/03/2022.
@@ -7,19 +7,19 @@
 
 import Foundation
 
-struct RWantlistRelease: Decodable {
+struct CollectionReleases: Decodable {
     
     // MARK: - Types
     
     enum CodingKeys: String, CodingKey {
-        case id
-        case release = "basic_information"
+        case pagination
+        case items = "releases"
     }
     
     
     
     // MARK: - Properties
     
-    let id: Int
-    let release: RRelease
+    let pagination: Pagination
+    let items: [CollectionRelease]
 }

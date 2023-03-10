@@ -7,7 +7,28 @@
 
 import Foundation
 
-public struct SearchResult: Identifiable {
+public struct SearchResult: Decodable, Identifiable {
+    
+    // MARK: - Types
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case title
+        case year
+        case catno
+        case format
+        case genre
+        case style
+        case thumbnail = "thumb"
+    }
+    
+    
+    
+    // MARK: - Private Properties
+    
+    private let thumbnail: String?
+    
+    
     
     // MARK: - Properties
     
@@ -18,25 +39,12 @@ public struct SearchResult: Identifiable {
     public let format: [String]
     public let genre: [String]
     public let style: [String]
-    public let thumbnailUrl: URL?
+    
+    public var thumbnailUrl: URL? {
+        URL(thumbnail)
+    }
     
     public var formatsDescription: String {
         format.joined(separator: ", ")
     }
-    
-    
-    
-    // MARK: - Construction
-    
-    init(_ searchResult: RSearchResult) {
-        id = searchResult.id
-        title = searchResult.title
-        year = searchResult.year
-        catno = searchResult.catno
-        format = searchResult.format
-        genre = searchResult.genre
-        style = searchResult.style
-        thumbnailUrl = URL(searchResult.thumbnail)
-    }
-    
 }

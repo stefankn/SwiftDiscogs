@@ -1,5 +1,5 @@
 //
-//  RIdentity.swift
+//  Identity.swift
 //  
 //
 //  Created by Stefan Klein Nulent on 20/03/2022.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct RIdentity: Decodable {
+struct Identity: Decodable {
     
     // MARK: - Properties
     

@@ -7,34 +7,28 @@
 
 import Foundation
 
-public struct Video: Identifiable {
+public struct Video: Decodable, Identifiable {
+    
+    // MARK: - Private Properties
+    
+    private let uri: String
+    
+    
     
     // MARK: - Properties
     
-    public let url: URL
     public let title: String
     public let description: String
     public let duration: Int
     
-    
-    // MARK: Identifiable Properties
-    
-    public var id: URL {
-        url
+    public var url: URL? {
+        URL(uri)
     }
     
     
+    // MARK: Identifiable Properties
     
-    // MARK: - Construction
-    
-    init?(_ video: RVideo) {
-        if let url = URL(video.uri) {
-            self.url = url
-            title = video.title
-            description = video.description
-            duration = video.duration
-        } else {
-            return nil
-        }
+    public var id: String {
+        uri
     }
 }

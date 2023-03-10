@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftCore
 
 public struct Sorting: Hashable, Identifiable, Codable {
     
