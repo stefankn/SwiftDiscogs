@@ -66,10 +66,11 @@ final class DiscogsService: Service {
     }
     
     func getCollectionFolders(username: String) async throws -> [CollectionFolder] {
-        try await get("/users/\(username)/collection/folders")
+        let response: CollectionFolders = try await get("/users/\(username)/collection/folders")
+        return response.folders
     }
     
-    func getCollectionReleases(username: String, sort: Sorting, folderId: Int = 0, perPage: Int? = nil, nextPage: URL? = nil) async throws -> CollectionReleases {
+    func getCollectionReleases(username: String, sort: Sorting, folder: CollectionFolder? = nil, perPage: Int? = nil, nextPage: URL? = nil) async throws -> CollectionReleases {
         if let nextPage = nextPage {
             return try await get(nextPage)
         } else {
@@ -78,7 +79,7 @@ final class DiscogsService: Service {
                 parameters.append(("per_page", perPage))
             }
             
-            return try await get("/users/\(username)/collection/folders/\(folderId)/releases", parameters: parameters)
+            return try await get("/users/\(username)/collection/folders/\(folder?.id ?? 0)/releases", parameters: parameters)
         }
     }
     
