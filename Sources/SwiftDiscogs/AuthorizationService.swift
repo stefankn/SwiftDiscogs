@@ -9,6 +9,15 @@ import Foundation
 import SwiftCore
 
 final class AuthorizationService: Service {
+    
+    // MARK: - Types
+    
+    struct AccessToken {
+        let token: String
+        let secret: String
+    }
+    
+    
 
     // MARK: - Private Properties
     
@@ -32,13 +41,11 @@ final class AuthorizationService: Service {
     
     var accessToken: AccessToken? {
         didSet {
-            if
-                let accessToken = accessToken,
-                let data = try? JSONEncoder().encode(accessToken) {
-
-                UserDefaults.standard.set(data, for: .accessToken)
+            if let accessToken = accessToken, Keychain().set(accessToken.secret, for: accessToken.token) {
+                UserDefaults.standard.set(accessToken.token, for: .authToken)
             } else {
-                UserDefaults.standard.remove(for: .accessToken)
+                _ = Keychain().removeAll()
+                UserDefaults.standard.remove(for: .authToken)
             }
         }
     }
@@ -62,10 +69,10 @@ final class AuthorizationService: Service {
         self.callbackURL = callbackURL
         
         if
-            let data = UserDefaults.standard.data(for: .accessToken),
-            let accessToken = try? JSONDecoder().decode(AccessToken.self, from: data) {
+            let authToken = UserDefaults.standard.string(for: .authToken),
+            let authSecret = Keychain().string(for: authToken) {
 
-            self.accessToken = accessToken
+            self.accessToken = AccessToken(token: authToken, secret: authSecret)
         }
     }
     

@@ -12,5 +12,5 @@ extension UserDefaults.Key {
     
     // MARK: - Constants
     
-    static let accessToken: UserDefaults.Key = "SwiftDiscogs.AccessToken"
+    static let authToken: UserDefaults.Key = "SwiftDiscogs.AuthToken"
 }
