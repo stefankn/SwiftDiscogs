@@ -8,31 +8,25 @@
 import Foundation
 import SwiftCore
 
-final class DiscogsService: Service {
+public final class DiscogsService: Service {
+    
+    // MARK: - Private Properties
+    
+    private let authorizationService: AuthorizationService
+    private var identity: Identity?
+    
+    
     
     // MARK: - Properties
     
-    let userAgent: String
-    let consumerKey: String
-    let consumerSecret: String
-    
-    var accessToken: AccessToken? {
-        didSet {
-            if
-                let accessToken = accessToken,
-                let data = try? JSONEncoder().encode(accessToken) {
-
-                UserDefaults.standard.set(data, for: .accessToken)
-            } else {
-                UserDefaults.standard.remove(for: .accessToken)
-            }
-        }
+    public var isAuthorized: Bool {
+        authorizationService.accessToken != nil
     }
     
     
     // MARK: Service Properties
     
-    override var baseURL: URL? {
+    public override var baseURL: URL? {
         URL(string: "https://api.discogs.com")
     }
     
@@ -40,111 +34,146 @@ final class DiscogsService: Service {
     
     // MARK: - Construction
     
-    init(userAgent: String, consumerKey: String, consumerSecret: String) {
-        self.userAgent = userAgent
-        self.consumerKey = consumerKey
-        self.consumerSecret = consumerSecret
-
-        if
-            let data = UserDefaults.standard.data(for: .accessToken),
-            let accessToken = try? JSONDecoder().decode(AccessToken.self, from: data) {
-
-            self.accessToken = accessToken
-        }
+    public init(appName: String, appVersion: String, consumerKey: String, consumerSecret: String, callbackURL: String) {
+        authorizationService = AuthorizationService(
+            appName: appName,
+            appVersion: appVersion,
+            consumerKey: consumerKey,
+            consumerSecret: consumerSecret,
+            callbackURL: callbackURL
+        )
     }
     
     
     
     // MARK: - Functions
     
-    func getIdentity() async throws -> Identity {
-        try await get("/oauth/identity")
+    public func authorize() async throws -> URL  {
+        try await authorizationService.getAuthorizationURL()
     }
     
-    func getProfile(username: String) async throws -> Profile {
-        try await get("/users/\(username)")
+    public func handleCallback(verificationURL: URL) async throws {
+        try await authorizationService.getAccessToken(verificationURL: verificationURL)
+    }
+
+    public func getProfile() async throws -> Profile {
+        let identity = try await resolveIdentity()
+        return try await get("/users/\(identity.username)")
     }
     
-    func getCollectionFolders(username: String) async throws -> [CollectionFolder] {
-        let response: CollectionFolders = try await get("/users/\(username)/collection/folders")
+    public func getCollectionFolders() async throws -> [CollectionFolder] {
+        let identity = try await resolveIdentity()
+        let response: CollectionFolders = try await get("/users/\(identity.username)/collection/folders")
         return response.folders
     }
     
-    func getCollectionReleases(username: String, sort: Sorting, folder: CollectionFolder? = nil, perPage: Int? = nil, nextPage: URL? = nil) async throws -> CollectionReleases {
+    public func getCollection(sort: Sorting, folder: CollectionFolder? = nil, perPage: Int? = nil, nextPage: URL? = nil) async throws -> Pager<CollectionRelease> {
+        let identity = try await resolveIdentity()
+        let response: CollectionReleases
         if let nextPage = nextPage {
-            return try await get(nextPage)
+            response = try await get(nextPage)
         } else {
             var parameters = sort.parameters
             if let perPage = perPage {
                 parameters.append(("per_page", perPage))
             }
             
-            return try await get("/users/\(username)/collection/folders/\(folder?.id ?? 0)/releases", parameters: parameters)
+            response = try await get("/users/\(identity.username)/collection/folders/\(folder?.id ?? 0)/releases", parameters: parameters)
         }
+        
+        return Pager(response.items, pagination: response.pagination)
     }
     
-    func getWantlistReleases(username: String, sort: Sorting, perPage: Int? = nil, nextPage: URL? = nil) async throws -> WantlistReleases {
+    public func getWantlist(sort: Sorting, perPage: Int? = nil, nextPage: URL? = nil) async throws -> Pager<WantlistRelease> {
+        let identity = try await resolveIdentity()
+        let response: WantlistReleases
         if let nextPage = nextPage {
-            return try await get(nextPage)
+            response = try await get(nextPage)
         } else {
             var parameters = sort.parameters
             if let perPage = perPage {
                 parameters.append(("per_page", perPage))
             }
             
-            return try await get("/users/\(username)/wants", parameters: parameters)
+            response = try await get("/users/\(identity.username)/wants", parameters: parameters)
         }
+        
+        return Pager(response.wants, pagination: response.pagination)
     }
     
-    func getRelease(id: Int) async throws -> Release {
+    public func getRelease(id: Int) async throws -> Release {
         try await get("/releases/\(id)")
     }
     
-    func search(query: String, perPage: Int? = nil) async throws -> SearchResults {
-        try await get("/database/search", parameters: [("query", query), ("type", "release")])
+    public func search(query: String, perPage: Int? = nil) async throws -> Pager<SearchResult> {
+        let response: SearchResults = try await get("/database/search", parameters: [("query", query), ("type", "release")])
+        return Pager(response.results, pagination: response.pagination)
     }
     
-    func search(nextPage: URL) async throws -> SearchResults {
-        try await get(nextPage)
+    public func search(nextPage: URL) async throws -> Pager<SearchResult> {
+        let response: SearchResults = try await get(nextPage)
+        return Pager(response.results, pagination: response.pagination)
     }
     
-    func addToWantlist(username: String, releaseId: Int) async throws -> WantlistRelease {
-        try await put("/users/\(username)/wants/\(releaseId)")
+    public func addToWantlist(releaseId: Int) async throws -> WantlistRelease {
+        let identity = try await resolveIdentity()
+        return try await put("/users/\(identity.username)/wants/\(releaseId)")
     }
     
-    func removeFromWantlist(username: String, releaseId: Int) async throws {
-        try await delete("/users/\(username)/wants/\(releaseId)")
+    public func removeFromWantlist(releaseId: Int) async throws {
+        let identity = try await resolveIdentity()
+        return try await delete("/users/\(identity.username)/wants/\(releaseId)")
     }
     
-    func addToCollection(username: String, releaseId: Int, folderId: Int) async throws -> CollectionRelease {
-        try await post("/users/\(username)/collection/folders/\(folderId)/releases/\(releaseId)")
+    public func addToCollection(releaseId: Int, folderId: Int) async throws -> CollectionRelease {
+        let identity = try await resolveIdentity()
+        return try await post("/users/\(identity.username)/collection/folders/\(folderId)/releases/\(releaseId)")
     }
     
-    func removeFromCollection(username: String, releaseId: Int, instanceId: Int, folderId: Int) async throws {
-        try await delete("/users/\(username)/collection/folders/\(folderId)/releases/\(releaseId)/instances/\(instanceId)")
+    public func removeFromCollection(releaseId: Int, instanceId: Int, folderId: Int) async throws {
+        let identity = try await resolveIdentity()
+        return try await delete("/users/\(identity.username)/collection/folders/\(folderId)/releases/\(releaseId)/instances/\(instanceId)")
     }
     
     
     // MARK: Service Functions
     
-    override func prepare(_ request: URLRequest) async throws -> URLRequest {
-        guard let accessToken = accessToken else {
+    public override func prepare(_ request: URLRequest) async throws -> URLRequest {
+        guard let accessToken = authorizationService.accessToken else {
             throw URLError(.userAuthenticationRequired)
         }
         
         var request = request
-        request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
+        request.setValue(authorizationService.userAgent, forHTTPHeaderField: "User-Agent")
 
         let headers = [
-            #"OAuth oauth_consumer_key="\#(consumerKey)""#,
+            #"OAuth oauth_consumer_key="\#(authorizationService.consumerKey)""#,
             #"oauth_nonce="\#(UUID().uuidString)""#,
             #"oauth_signature_method="PLAINTEXT""#,
             #"oauth_timestamp="\#(Int(Date.now.timeIntervalSince1970))""#,
             #"oauth_token="\#(accessToken.token)""#,
-            #"oauth_signature="\#(consumerSecret)&\#(accessToken.secret)""#
+            #"oauth_signature="\#(authorizationService.consumerSecret)&\#(accessToken.secret)""#
         ]
         request.setValue(headers.joined(separator: ", "), forHTTPHeaderField: "Authorization")
         
         return request
+    }
+    
+    
+    
+    // MARK: - Private Functions
+    
+    private func resolveIdentity() async throws -> Identity {
+        if let identity = identity {
+            return identity
+        } else {
+            let identity = try await getIdentity()
+            self.identity = identity
+            return identity
+        }
+    }
+    
+    private func getIdentity() async throws -> Identity {
+        try await get("/oauth/identity")
     }
 }

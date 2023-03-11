@@ -12,7 +12,6 @@ final class AuthorizationService: Service {
 
     // MARK: - Private Properties
     
-    private let callbackURL: String
     private var authToken: String?
     private var authVerifier: String?
     private var authSecret: String?
@@ -21,9 +20,28 @@ final class AuthorizationService: Service {
     
     // MARK: - Properties
     
-    let userAgent: String
+    let appName: String
+    let appVersion: String
     let consumerKey: String
     let consumerSecret: String
+    let callbackURL: String
+    
+    var userAgent: String {
+        "\(appName)/\(appVersion)"
+    }
+    
+    var accessToken: AccessToken? {
+        didSet {
+            if
+                let accessToken = accessToken,
+                let data = try? JSONEncoder().encode(accessToken) {
+
+                UserDefaults.standard.set(data, for: .accessToken)
+            } else {
+                UserDefaults.standard.remove(for: .accessToken)
+            }
+        }
+    }
     
     
     // MARK: Service Properties
@@ -36,11 +54,19 @@ final class AuthorizationService: Service {
     
     // MARK: - Construction
     
-    init(userAgent: String, consumerKey: String, consumerSecret: String, callbackURL: String) {
-        self.userAgent = userAgent
+    init(appName: String, appVersion: String, consumerKey: String, consumerSecret: String, callbackURL: String) {
+        self.appName = appName
+        self.appVersion = appVersion
         self.consumerKey = consumerKey
         self.consumerSecret = consumerSecret
         self.callbackURL = callbackURL
+        
+        if
+            let data = UserDefaults.standard.data(for: .accessToken),
+            let accessToken = try? JSONDecoder().decode(AccessToken.self, from: data) {
+
+            self.accessToken = accessToken
+        }
     }
     
     
@@ -51,7 +77,7 @@ final class AuthorizationService: Service {
         try await get("/oauth/request_token", decode: generateAuthorizationURL)
     }
     
-    func getAccessToken(verificationURL: URL) async throws -> AccessToken {
+    func getAccessToken(verificationURL: URL) async throws {
         if
             let components = URLComponents(url: verificationURL, resolvingAgainstBaseURL: false),
             let authToken = components.queryItems?.first(where: { $0.name == "oauth_token" })?.value,
@@ -62,7 +88,7 @@ final class AuthorizationService: Service {
             self.authVerifier = authVerifier
             self.authSecret = authSecret
             
-            return try await post("/oauth/access_token", decode: parseAccessTokenResponse)
+            accessToken = try await post("/oauth/access_token", decode: parseAccessTokenResponse)
         } else {
             throw URLError(.badServerResponse)
         }
