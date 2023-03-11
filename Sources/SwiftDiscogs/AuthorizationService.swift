@@ -101,6 +101,10 @@ final class AuthorizationService: Service {
         }
     }
     
+    func signout() {
+        accessToken = nil
+    }
+    
     
     // MARK: Service Functions
     
@@ -157,6 +161,10 @@ final class AuthorizationService: Service {
             let components = URLComponents(string: "?\(response)"),
             let accessToken = components.queryItems?.first(where: { $0.name == "oauth_token" })?.value,
             let accessTokenSecret = components.queryItems?.first(where: { $0.name == "oauth_token_secret" })?.value {
+            
+            authToken = nil
+            authSecret = nil
+            authVerifier = nil
 
             return AccessToken(token: accessToken, secret: accessTokenSecret)
         } else {

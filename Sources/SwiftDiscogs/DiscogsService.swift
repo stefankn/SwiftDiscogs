@@ -55,6 +55,10 @@ public final class DiscogsService: Service {
     public func handleCallback(verificationURL: URL) async throws {
         try await authorizationService.getAccessToken(verificationURL: verificationURL)
     }
+    
+    public func signout() {
+        authorizationService.signout()
+    }
 
     public func getProfile() async throws -> Profile {
         let identity = try await resolveIdentity()
