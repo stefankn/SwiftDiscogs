@@ -58,6 +58,7 @@ public final class DiscogsService: Service {
     
     public func signout() {
         authorizationService.signout()
+        identity = nil
     }
 
     public func getProfile() async throws -> Profile {
