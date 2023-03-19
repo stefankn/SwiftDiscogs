@@ -140,6 +140,12 @@ public final class DiscogsService: Service {
         return try await delete("/users/\(identity.username)/collection/folders/\(folderId)/releases/\(releaseId)/instances/\(instanceId)")
     }
     
+    public func marketplaceOffers(for release: Release) async throws -> [MarketplaceOffer] {
+        let data = try await get(URL(string: "https://www.discogs.com/sell/mplistrss?release_id=\(release.id)&output=rss")!, decode: { $0 })
+        let document = try XMLReader().parse(data)
+        return document.rootElement.childElements.compactMap(MarketplaceOffer.init)
+    }
+    
     
     // MARK: Service Functions
     
